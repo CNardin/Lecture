@@ -12,3 +12,39 @@
 # Octave session info
 octave-workspace
 
+# SAP2000 file to ignore
+
+*.K_0
+*.K_I
+*.K_J
+*.K_M
+*.LOG
+*.OUT
+*.Y
+*.Y$$
+*.Y00
+*.Y01
+*.Y02
+*.Y03
+*.Y_
+*.Y_1
+*.ico
+*.msh
+*.$2k
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
