@@ -49,7 +49,7 @@ for nn =1: numel(NN)
     figure(999)
     plot(EDP,SCALE);
     hold on
-    clear EDP SCALE 
+%     clear EDP SCALE 
 %     s_plotQvsID
     
 end  

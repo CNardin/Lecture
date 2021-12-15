@@ -28,8 +28,8 @@ g=9.816;
 workDir = (cd)
 imagesDir = fullfile(workDir,'images');
 %% General flag/debug
- flagGM = 1; % 1 = true; 0 = false
-
+flagGM = 1; % 1 = true; 0 = false
+flagSCH = 'mrf'; % 'mrf'   -   'bf'
 
 %%  Ground motions 
 Ground_motions = load('accelrot_cellarray.mat'); 
@@ -44,8 +44,8 @@ DT = [0.01 , 0.01 , 0.005, 0.005, 0.005, 0.005, 0.02 , 0.02, 0.02, 0.01,...
 
   
 %% MDOF Properties 
-% MDOF_properties_BW_MRF 
-MDOF_properties_BW_BF
+MDOF_properties_BW_MRF 
+% MDOF_properties_BW_BF
 
 %% Structural behaviour
 prompt = 'Type  -le - or - bw - for linear elastic behaviour or Bouc Wen hysteretic model: ';
@@ -109,20 +109,23 @@ end
 
 
 %% Limit States
-% LS = [0.50 0.75 1 2 3]*4/100; %MRF
-LS = [0.30 0.50 1 2]*4/100; %BF
+LS = [0.50 0.75 1 2 3]*4/100; %MRF
+% LS = [0.30 0.50 1 2]*4/100; %BF
 
 %% Structural Analysis
-for ls_i = 1:numel(LS)
-ls_val = LS(ls_i)
-
-structuralAnalysis
-
-ls_i = ls_i + 1;
+if flagGM == 0
+    for ls_i = 1:numel(LS)
+        ls_val = LS(ls_i)
+        
+        structuralAnalysis
+        
+        ls_i = ls_i + 1;
+    end
 end
 
 
 %% Plot fragility curves for every identified limit state
+cd(fullfile(workDir,flagSCH))
 for ls_i=1:numel(LS)
 
     matName = strcat('LS',num2str(ls_i),'.mat');
@@ -134,18 +137,24 @@ for ls_i=1:numel(LS)
 
 end
 
-% Par=[theta_mle_DS1, beta_mle_DS1;
-%   theta_mle_DS2, beta_mle_DS2;
-%   theta_mle_DS3, beta_mle_DS3;
-%   theta_mle_DS4, beta_mle_DS4;
-%   theta_mle_DS5, beta_mle_DS5];
-%save('MRF_par','Par')
-Par=[theta_mle_DS1, beta_mle_DS1;
-  theta_mle_DS2, beta_mle_DS2;
-  theta_mle_DS3, beta_mle_DS3;
-  theta_mle_DS4, beta_mle_DS4];
-%save('BF_par','Par')
-
+switch flagSCH
+    case 'mrf'
+        Par=[theta_mle_DS1, beta_mle_DS1;
+            theta_mle_DS2, beta_mle_DS2;
+            theta_mle_DS3, beta_mle_DS3;
+            theta_mle_DS4, beta_mle_DS4;
+            theta_mle_DS5, beta_mle_DS5];
+        %save('MRF_par','Par')
+    case 'bf'
+        Par=[theta_mle_DS1, beta_mle_DS1;
+            theta_mle_DS2, beta_mle_DS2;
+            theta_mle_DS3, beta_mle_DS3;
+            theta_mle_DS4, beta_mle_DS4];
+        %save('BF_par','Par')
+    otherwise
+        warning('KKK: not available.')
+        return
+end
 %% compute fragility functions using estimated parameters
 xlim_sup=4;
 x_vals = 0:0.01:xlim_sup; % IM levels to plot fragility function 
@@ -154,19 +163,19 @@ p_mle_DS1 = normcdf((log(x_vals/theta_mle_DS1))/beta_mle_DS1);
 p_mle_DS2 = normcdf((log(x_vals/theta_mle_DS2))/beta_mle_DS2); 
 p_mle_DS3 = normcdf((log(x_vals/theta_mle_DS3))/beta_mle_DS3); 
 p_mle_DS4 = normcdf((log(x_vals/theta_mle_DS4))/beta_mle_DS4); 
-% p_mle_DS5 = normcdf((log(x_vals/theta_mle_DS5))/beta_mle_DS5); 
 
 
 figure('OuterPosition',[100 100 1100 450]);
-plot(x_vals,p_mle_DS1, '-', 'linewidth', 2, 'color', [0    0.4470    0.7410])
-hold on 
-plot(x_vals,p_mle_DS2, '-', 'linewidth', 2)
-hold on 
-plot(x_vals,p_mle_DS3, '.-', 'linewidth', 2)
-hold on 
-plot(x_vals,p_mle_DS4, '-', 'linewidth', 2)
-hold on 
-% plot(x_vals,p_mle_DS5, '-', 'linewidth', 2)
+hold on; plot(x_vals,p_mle_DS1, '-', 'linewidth', 2, 'color', [0    0.4470    0.7410])
+hold on; plot(x_vals,p_mle_DS2, '-', 'linewidth', 2)
+hold on; plot(x_vals,p_mle_DS3, '.-', 'linewidth', 2)
+hold on; plot(x_vals,p_mle_DS4, '-', 'linewidth', 2)
+
+if strcmp(flagSCH,'mrf')
+    p_mle_DS5 = normcdf((log(x_vals/theta_mle_DS5))/beta_mle_DS5); 
+    hold on; plot(x_vals,p_mle_DS5, '-', 'linewidth', 2)
+end
+
 xlim([0 xlim_sup])
 title('Fragility Curves','Interpreter','Latex')
 set(gca,'fontname','Times')
@@ -180,7 +189,6 @@ title('ii)','Interpreter','Latex')
 grid on
 legend boxoff
 grid on
-tightfig;
 
 
 
